@@ -1,0 +1,403 @@
+<html><head><base href="." /><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GAS Vocabulary Concentration (Longteng113 B1L7-L9 Vocab)</title>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-container {
+    max-width: 800px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.card {
+    background: #2196f3;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    min-height: 80px;
+    width: 150px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: transform 0.3s ease;
+    transform-style: preserve-3d;
+    font-size: 16px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card.flipped {
+    background: #4caf50;
+}
+
+.card.matched {
+    background: #81c784;
+    cursor: default;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.button {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.button:hover {
+    background: #1976d2;
+}
+
+@keyframes celebrate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.celebration {
+    animation: celebrate 0.5s ease;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.timer {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2196f3;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal img {
+    max-width: 200px;
+    margin: 0 auto;
+    display: block;
+}
+
+.close-modal {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>GAS Vocabulary Concentration</h1>
+        <p class="subtitle">Complete this concentration game successfully and earn a Pokemon!</p>
+        <div class="stats">
+            <div>Time: <span id="timer" class="timer">00:00</span></div>
+            <div>Moves: <span id="moves">0</span></div>
+            <div>Matches: <span id="matches">0</span>/8</div>
+            <button class="button" id="reset">New Game</button>
+        </div>
+        <div class="card-grid" id="grid"></div>
+        <div class="footer">Author: Aaron Shi. Released in November 2024. Updated on Decemeber 27, 2024.</div>
+    </div>
+
+    <div id="congratsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Congratulations!</h2>
+            <p id="congratsMessage"></p>
+            <img id="pokemonImage" alt="Random Pokemon celebration image" width="200" height="200">
+            <button class="button" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+<script>
+const allPhrases = [
+    ["triumph", "勝利；成就（n.）"],
+    ["apply", "申請；報名(v.)"],
+    ["application", "申請（n.）"],
+    ["applicant", "申請人（n.）"],
+    ["instrument", "樂器（n.）"],
+    ["instrument", "儀器；器具（n.）"],
+    ["somehow", "以某種方式；不知怎麼地（adv.）"],
+    ["barely", "幾乎不（adv.）"],
+    ["bare", "赤裸的（adj.）"],
+    ["invaluable", "非常寶貴的赤裸的（adj.）"],
+    ["encouragement", "鼓勵（n.）"],
+    ["encourage", "鼓勵（v.）"],
+    ["discourage", "阻止；勸阻（v.）"],
+    ["concert", "音樂會（n.）"],
+    ["receive", "收到；獲得（v.）"],
+    ["dazzle", "使讚嘆；使傾倒（v.）"],
+    ["potential", "潛力（n.）"],
+    ["scream", "尖叫（n./v.）"],
+    ["dizzy", "頭暈目眩的（adj.）"],
+    ["overseas", "海外的（adj.）"],
+    ["determination", "決心（n.）"],
+    ["determine", "決定；影響（n.）"],
+    ["faith", "信心；信任（n.）"],
+    ["faithful", "忠誠的；忠實的"],
+    ["pursue", "追求；從事（v.）"],
+    ["pursuit", "追求（n.）"],
+    ["familiar", "熟悉的"],
+    ["urge", "衝動（v./n.）"],
+    ["strategy", "策略（v.）"],
+    ["visible", "看得見的"],
+    ["purchase", "購買（v./n.）"],
+    ["profitable", "有利潤的"],
+    ["profit", "利潤、獲得好處（n./v.）"],
+    ["similarly", "同樣地；相似地（adv.）"],
+    ["similar", "相似的（adj.）"],
+    ["similarity", "相似性；相似處（n.）"],
+    ["aim", "針對；對象是（v.）"],
+    ["impulse", "衝動（n.）"],
+    ["display", "展示；陳列（n./v.）"],
+    ["offer", "特價（n.）"],
+    ["customer", "顧客；客戶（n.）"],
+    ["advantage", "優勢；有利條件（n.）"],
+    ["eventually", "最後（adv.）"],
+    ["trap", "圈套（n.）"],
+    ["eventual", "最後的（adj.）"],
+    ["aware", "知道；意識到（adj.）"],
+    ["awareness", "意識；認識（n.）"],
+    ["clever", "聰明的（adj.）"],
+    ["detailed", "詳細的；細緻的（adj.）"],
+    ["mess", "凌亂；髒亂（n.）"],
+    ["messy", "凌亂的；髒亂的（adj.）"],
+    ["express", "表達（v.）"],
+    ["expression", "表達（n.）"],
+    ["opinion", "想法；意見（n.）"],
+    ["contrast", "對比；對照（n./v.）"],
+    ["horror", "可怕；恐怖（n.）"],
+    ["horrify", "使人恐懼；驚嚇（v.）"],
+    ["horrible", "可怕的；令人害怕的（adj.）"],
+    ["innocence", "無辜；純真（n.）"],
+    ["innocent", "無辜的；純真的（adj.）"],
+    ["violence", "暴力（n.）"],
+    ["violent", "暴力的（adj.）"],
+    ["visual", "視覺的（adj.）"],
+    ["pollution", "汙染（n.）"],
+    ["permission", "許可；准許（n.）"],
+    ["permit", "許可；准許（n./v.）"],
+    ["effort", "努力（n.）"],
+    ["community", "社區（n.）"],
+    ["associate", "聯想（v.）"],
+    ["criminal", "犯罪的（adj.）"],
+    ["crime", "犯罪行為（n.）"],
+    ["destructive", "破壞性的；毀滅性的（adj.）"],
+    ["destroy", "破壞；毀滅（v.）"],
+    ["destruction", "破壞；毀滅（n.）"]
+];
+
+let phrases = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let moves = 0;
+let cards = [];
+let timeStarted = false;
+let timerInterval;
+let seconds = 0;
+
+function selectRandomPhrases() {
+    const shuffledPhrases = [...allPhrases].sort(() => Math.random() - 0.5);
+    return shuffledPhrases.slice(0, 8);
+}
+
+function updateTimer() {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    document.getElementById('timer').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    seconds++;
+}
+
+function startTimer() {
+    if (!timeStarted) {
+        timeStarted = true;
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    timeStarted = false;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function createCard(content, index) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.textContent = '?';
+    card.dataset.index = index;
+    card.dataset.content = content;
+    card.addEventListener('click', () => {
+        startTimer();
+        flipCard(card);
+    });
+    return card;
+}
+
+function flipCard(card) {
+    if (flippedCards.length === 2 || card.classList.contains('matched') || 
+        flippedCards.includes(card)) return;
+
+    card.textContent = card.dataset.content;
+    card.classList.add('flipped');
+    flippedCards.push(card);
+
+    if (flippedCards.length === 2) {
+        moves++;
+        document.getElementById('moves').textContent = moves;
+        checkMatch();
+    }
+}
+
+function checkMatch() {
+    const [card1, card2] = flippedCards;
+    const pair1 = phrases.find(pair => pair.includes(card1.dataset.content));
+    const isMatch = pair1 && pair1.includes(card2.dataset.content);
+
+    setTimeout(() => {
+        if (isMatch) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            matchedPairs++;
+            document.getElementById('matches').textContent = matchedPairs;
+            if (matchedPairs === 8) {
+                stopTimer();
+                celebrate();
+            }
+        } else {
+            card1.textContent = '?';
+            card2.textContent = '?';
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+        }
+        flippedCards = [];
+    }, 1000);
+}
+
+async function celebrate() {
+    const container = document.querySelector('.game-container');
+    container.classList.add('celebration');
+    
+    const pokemonId = Math.floor(Math.random() * 898) + 1;
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`);
+    const data = await response.json();
+    
+    const currentDate = new Date().toLocaleDateString();
+    const finalTime = document.getElementById('timer').textContent;
+    const congratsMessage = `You spent ${finalTime} and took ${moves} moves to finish this vocabulary concentration on ${currentDate}. You've won ${data.name.charAt(0).toUpperCase() + data.name.slice(1)}!`;
+    
+    document.getElementById('congratsMessage').textContent = congratsMessage;
+    document.getElementById('pokemonImage').src = data.sprites.front_default;
+    document.getElementById('congratsModal').style.display = 'block';
+}
+
+function resetGame() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    flippedCards = [];
+    matchedPairs = 0;
+    moves = 0;
+    seconds = 0;
+    document.getElementById('moves').textContent = moves;
+    document.getElementById('matches').textContent = matchedPairs;
+    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('congratsModal').style.display = 'none';
+    stopTimer();
+    
+    phrases = selectRandomPhrases();
+    cards = [];
+    phrases.forEach(pair => {
+        cards.push(pair[0], pair[1]);
+    });
+    cards = shuffle(cards);
+    
+    cards.forEach((content, index) => {
+        const card = createCard(content, index);
+        grid.appendChild(card);
+    });
+
+    const container = document.querySelector('.game-container');
+    container.classList.remove('celebration');
+}
+
+document.getElementById('reset').addEventListener('click', resetGame);
+document.querySelector('.close-modal').addEventListener('click', () => {
+    document.getElementById('congratsModal').style.display = 'none';
+});
+
+// Initialize the game
+resetGame();
+</script>
+</body></html>
